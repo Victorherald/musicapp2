@@ -109,7 +109,7 @@ export function TopArtists() {
               <img
   src={imageMap[artist.name] || "https://via.placeholder.com/150"}
   alt={artist.name}
-  className="w-32 h-32 rounded-full object-cover"
+  className="w-32 h-32 rounded-full object-cover overflow-hidden"
 />
 
             </div>

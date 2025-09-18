@@ -31,7 +31,7 @@ export function AnimatedSearch() {
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex(Math.floor(Math.random() * placeholders.length));
-    }, 5000); // every 5 seconds
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -52,37 +52,38 @@ export function AnimatedSearch() {
   return (
     <div className="w-full max-w-md">
       {/* Search input + button */}
-      <div className="flex items-center bg-neutral-800 rounded-full px-4 py-2 shadow-md overflow-hidden">
+      <div className="flex items-center bg-neutral-800 rounded-full px-4 py-2 shadow-md overflow-hidden relative">
         <Search className="text-gray-400 mr-2" />
-      
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-          className="flex-1 bg-transparent outline-none text-blue-200 transition"
-        
-        />
-         
-           {/* Animated placeholder overlay */}
-           <>
-        {query === "" && (
-          <div className="align-left pointer-events-none text-gray-400">
-            <AnimatePresence mode="wait">
-              <motion.span
-                key={index}
-                initial={{ x: "100%", opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                exit={{ x: "-100%", opacity: 0 }}
-                transition={{ duration: 0.6, ease: "easeInOut" }}
-                className="flex-1 bg-transparent outline-none text-blue-200 drop-shadow-[0_0_8px_rgba(56,189,248,0.8)] text-sky-400"
-              >
-                {placeholders[index]}
-              </motion.span>
-            </AnimatePresence>
-          </div>     
-        )}
-            </>
+
+        {/* input container */}
+        <div className="relative flex-1">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            className="w-full bg-transparent outline-none text-purple-200"
+          />
+
+          {/* Animated placeholder overlay */}
+          {query === "" && (
+            <div className="absolute left-0 top-0 w-full pointer-events-none text-gray-400">
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={index}
+                  initial={{ x: "100%", opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: "-100%", opacity: 0 }}
+                  transition={{ duration: 0.6, ease: "easeInOut" }}
+                  className="text-purple-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.8)]"
+                >
+                  {placeholders[index]}
+                </motion.span>
+              </AnimatePresence>
+            </div>
+          )}
+        </div>
+
         <button
           onClick={handleSearch}
           className="ml-2 text-gray-400 hover:text-sky-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.8)] transition"
