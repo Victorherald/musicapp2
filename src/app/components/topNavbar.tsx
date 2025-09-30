@@ -1,23 +1,16 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Bell } from "lucide-react";
+import { Bell, Menu } from "lucide-react";
 import Link from "next/link";
 import { AnimatedSearch } from "../components/searchSect";
 import { useUser } from "./context/UserContext";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function TopNav() {
-  const { user } = useUser();
+  // ✅ Get both user and setUser here
+  const { user, setUser } = useUser();
 
-  // Example notifications array (use strings or objects)
-  // Option A: simple strings:
-  // const [notifications, setNotifications] = useState<string[]>([
-  //   "New album released by Drake",
-  //   "Your playlist has a new follower",
-  // ]);
-
-  // Option B: objects with read flag (recommended)
   const [notifications, setNotifications] = useState<
     { id: number; text: string; read: boolean }[]
   >([
@@ -25,16 +18,12 @@ export function TopNav() {
     { id: 2, text: "Your playlist has a new follower", read: false },
   ]);
 
-  const repeated = Array.from({ length: 100 }, () => ({ ...notifications }));
-
-  // unread count
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  // popup open state
   const [open, setOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const popupRef = useRef<HTMLDivElement | null>(null);
 
-  // click outside to close
   useEffect(() => {
     function handleDocClick(e: MouseEvent) {
       if (popupRef.current && !popupRef.current.contains(e.target as Node)) {
@@ -46,23 +35,44 @@ export function TopNav() {
   }, [open]);
 
   const togglePopup = () => setOpen((s) => !s);
-
   const markAllRead = () =>
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
 
   return (
-    <header className="ml-11 mr-11 w-[calc(100%-12rem)] bg-neutral-900 text-white flex items-center justify-between px-6 py-1 shadow-md fixed top-0 right-0 z-10">
-      {/* Left nav */}
-      <nav className="flex space-x-6">
-        <Link href="/" className="hover:text-purple-400 transition">Music</Link>
-        <Link href="/browse" className="hover:text-purple-400 transition">Podcasts</Link>
-        <Link href="/library" className="hover:text-purple-400 transition">Live</Link>
-      </nav>
+    <header className="w-full bg-neutral-900 text-white flex flex-col sm:flex-row items-center justify-between px-4 md:px-6 py-2 shadow-md fixed top-0 left-0 z-10 gap-3">
+      {/* Left nav + hamburger */}
+      <div className="flex items-center space-x-6 w-full sm:w-auto justify-between sm:justify-start">
+        <button
+          className="md:hidden p-2 hover:bg-neutral-800 rounded-lg"
+          onClick={() => setMenuOpen((s) => !s)}
+        >
+          <Menu className="h-6 w-6" />
+        </button>
+
+        <nav
+          className={`${
+            menuOpen ? "block" : "hidden"
+          } absolute top-14 left-0 w-full bg-neutral-900 p-4 space-y-2 md:static md:flex md:space-x-6 md:space-y-0`}
+        >
+          <Link href="/" className="hover:text-purple-400 transition">
+            Music
+          </Link>
+          <Link href="/browse" className="hover:text-purple-400 transition">
+            Podcasts
+          </Link>
+          <Link href="/library" className="hover:text-purple-400 transition">
+            Live
+          </Link>
+        </nav>
+      </div>
+
+      {/* Search */}
+      <div className="flex-1 max-w-xs sm:max-w-md w-full px-2">
+        <AnimatedSearch />
+      </div>
 
       {/* Right side */}
       <div className="flex items-center space-x-4">
-        <AnimatedSearch />
-
         {/* Notification bell */}
         <div className="relative">
           <button
@@ -71,18 +81,13 @@ export function TopNav() {
             className="relative p-2 hover:bg-neutral-800 rounded-full"
           >
             <Bell className="h-5 w-5" />
-            {/* numeric badge (only show if unreadCount > 0) */}
             {unreadCount > 0 && (
-              <span
-                aria-hidden
-                className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white bg-red-500 rounded-full shadow"
-              >
+              <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white bg-red-500 rounded-full shadow">
                 {unreadCount > 99 ? "99+" : unreadCount}
               </span>
             )}
           </button>
 
-          {/* Popup */}
           <AnimatePresence>
             {open && (
               <motion.div
@@ -91,7 +96,7 @@ export function TopNav() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.18 }}
-                className="absolute right-0 mt-2 w-80 bg-neutral-800 text-white rounded-lg shadow-lg p-3 z-20"
+                className="absolute right-0 mt-2 w-72 sm:w-80 bg-neutral-800 text-white rounded-lg shadow-lg p-3 z-20"
               >
                 {notifications.length > 0 ? (
                   <>
@@ -131,16 +136,58 @@ export function TopNav() {
         </div>
 
         {/* Avatar / auth */}
-        <div className="flex items-center justify-end space-x-4 p-4">
+        <div className="flex items-center justify-end space-x-4 relative">
           {!user ? (
             <>
-              <Link href="/login" className="px-4 py-2 bg-purple-600 rounded-lg hover:bg-purple-700">Login</Link>
-              <Link href="/signup" className="px-4 py-2 bg-green-600 rounded-lg hover:bg-green-700">SignUp</Link>
+              <Link
+                href="/login"
+                className="px-3 py-1 bg-purple-600 rounded-lg hover:bg-purple-700 text-sm"
+              >
+                Login
+              </Link>
+              <Link
+                href="/signup"
+                className="px-3 py-1 bg-green-600 rounded-lg hover:bg-green-700 text-sm"
+              >
+                SignUp
+              </Link>
             </>
           ) : (
-            <div className="flex items-center space-x-2">
-              <img src={user.avatar} alt="Profile" className="w-8 h-8 rounded-full border border-purple-500" />
-              <span className="text-sm">{user.name}</span>
+            <div className="relative">
+              <button
+                onClick={() => setMenuOpen((s) => !s)}
+                className="flex items-center space-x-2 hover:bg-neutral-800 px-2 py-1 rounded-lg"
+              >
+                <img
+                  src={user.avatar}
+                  alt="Profile"
+                  className="w-8 h-8 rounded-full border border-purple-500"
+                />
+                <span className="text-sm">{user.name}</span>
+              </button>
+
+              <AnimatePresence>
+                {menuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 mt-2 w-40 bg-neutral-800 text-white rounded-lg shadow-lg p-2 z-20"
+                  >
+                    <button
+                      onClick={() => {
+                        setUser(null); // ✅ clear user from context
+                        setMenuOpen(false);
+                        console.log("Logged out");
+                      }}
+                      className="px-3 py-1 text-center bg-purple-600 rounded-lg hover:bg-purple-700 text-sm"
+                    >
+                      Logout
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           )}
         </div>
