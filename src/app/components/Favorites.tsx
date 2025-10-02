@@ -1,17 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Heart, Play } from "lucide-react";
+import { Heart, Play, Pause, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-type FavoriteProps = {
+type TrackProps = {
   id: number;
   title: string;
   artist: string;
   cover: string;
 };
 
-const recommendedTracks: FavoriteProps[] = [
+const recommendedTracks: TrackProps[] = [
   {
     id: 1,
     title: "Blinding Lights",
@@ -33,9 +33,12 @@ const recommendedTracks: FavoriteProps[] = [
 ];
 
 export function Favorites() {
-  const [favorites, setFavorites] = useState<FavoriteProps[]>([]);
+  const [favorites, setFavorites] = useState<TrackProps[]>([]);
+  const [currentTrack, setCurrentTrack] = useState<TrackProps | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  const toggleFavorite = (track: FavoriteProps) => {
+  // Add / remove favorite
+  const toggleFavorite = (track: TrackProps) => {
     setFavorites((prev) =>
       prev.find((f) => f.id === track.id)
         ? prev.filter((f) => f.id !== track.id)
@@ -43,139 +46,176 @@ export function Favorites() {
     );
   };
 
+  // Open popup
+  const openPlayer = (track: TrackProps) => {
+    setCurrentTrack(track);
+    setIsPlaying(true);
+  };
+
   return (
-    <section className="p-6 flex flex-col gap-8 w-full">
+    <section className="p-4 sm:p-6 flex flex-col gap-8 w-full lg:max-w-5xl lg:mx-auto">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="flex justify-between items-center"
-      >
+      <div className="flex justify-between items-center">
         <h2 className="text-3xl font-extrabold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
           Your Favorites
         </h2>
-        <span className="text-sm text-gray-400">
-          {favorites.length} saved tracks
-        </span>
-      </motion.div>
+        <span className="text-sm text-gray-400">{favorites.length} saved tracks</span>
+      </div>
 
-      {/* Layout */}
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Favorites */}
-        <motion.div
-          initial={{ opacity: 0, x: -50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-          className="flex-1 max-h-[calc(100vh-220px)] overflow-y-auto backdrop-blur-md bg-white/5 p-4 rounded-2xl shadow-xl border border-white/10"
-        >
+        {/* Favorites List */}
+        <div className="flex-1 max-h-[calc(100vh-110px)] overflow-y-auto backdrop-blur-md bg-white/5 p-4 rounded-2xl shadow-xl border border-white/10">
           {favorites.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center text-gray-400 py-16"
-            >
-              <p className="text-lg mb-2">💔 No favorites yet</p>
+            <div className="text-center text-gray-400 py-11">
+              <p className="text-lg mb-2">No favorites yet</p>
               <p className="text-sm">Start adding tracks to see them here.</p>
-            </motion.div>
+            </div>
           ) : (
             <ul className="flex flex-col gap-4">
-              <AnimatePresence>
-                {favorites.map((track) => (
-                  <motion.li
-                    key={track.id}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.3 }}
-                    whileHover={{ scale: 1.03 }}
-                    className="flex items-center gap-4 bg-gradient-to-r from-neutral-800 to-neutral-900 rounded-xl p-4 shadow-md"
-                  >
-                    <motion.img
-                      src={track.cover}
-                      alt={track.title}
-                      className="w-16 h-16 rounded-lg object-cover"
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ duration: 0.3 }}
-                    />
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{track.title}</h3>
-                      <p className="text-xs text-gray-400">{track.artist}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <motion.button
-                        whileTap={{ scale: 0.85 }}
-                        className="p-2 bg-purple-600 rounded-full hover:bg-purple-700 transition"
-                      >
-                        <Play size={16} />
-                      </motion.button>
-                      <motion.button
-                        whileTap={{ scale: 0.85 }}
-                        onClick={() => toggleFavorite(track)}
-                        className="p-2 rounded-full bg-neutral-700 hover:bg-neutral-600 transition"
-                      >
-                        <Heart
-                          size={16}
-                          className={
-                            favorites.find((f) => f.id === track.id)
-                              ? "text-red-500"
-                              : "text-gray-400"
-                          }
-                        />
-                      </motion.button>
-                    </div>
-                  </motion.li>
-                ))}
-              </AnimatePresence>
+              {favorites.map((track) => (
+                <li
+                  key={track.id}
+                  className="flex items-center gap-4 bg-gradient-to-r from-neutral-800 to-neutral-900 rounded-xl p-4 shadow-md"
+                >
+                  <motion.img
+                    layoutId={`disc-${track.id}`}
+                    src={track.cover}
+                    alt={track.title}
+                    className="w-16 h-16 rounded-full object-cover"
+                  />
+                  <div className="flex-1">
+                    <h3 className="font-semibold">{track.title}</h3>
+                    <p className="text-xs text-gray-400">{track.artist}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => openPlayer(track)}
+                      className="p-2 bg-purple-600 rounded-full hover:bg-purple-700 transition"
+                    >
+                      <Play size={16} />
+                    </button>
+                    <button
+                      onClick={() => toggleFavorite(track)}
+                      className="p-2 rounded-full bg-neutral-700 hover:bg-neutral-600 transition"
+                    >
+                      <Heart
+                        size={16}
+                        className={
+                          favorites.find((f) => f.id === track.id)
+                            ? "text-red-500"
+                            : "text-gray-400"
+                        }
+                      />
+                    </button>
+                  </div>
+                </li>
+              ))}
             </ul>
           )}
-        </motion.div>
+        </div>
 
-        {/* Recommended */}
-        <motion.div
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-          className="flex-1 max-h-[calc(100vh-220px)] overflow-y-auto backdrop-blur-md p-4 rounded-2xl shadow-xl border bg-neutral-800"
-        >
+        {/* Recommended List */}
+        <div className="flex-1 max-h-[calc(100vh-220px)] overflow-y-auto backdrop-blur-md p-4 rounded-2xl shadow-xl border bg-neutral-800">
           <h3 className="text-xl font-bold mb-4 text-white">Recommended</h3>
           <ul className="flex flex-col gap-4">
             {recommendedTracks.map((track) => (
-              <motion.li
+              <li
                 key={track.id}
-                whileHover={{ scale: 1.03 }}
                 className="flex items-center gap-4 bg-gradient-to-r from-neutral-800 to-neutral-900 rounded-xl p-4 shadow-md"
               >
                 <motion.img
+                  layoutId={`disc-${track.id}`}
                   src={track.cover}
                   alt={track.title}
-                  className="w-16 h-16 rounded-lg object-cover"
-                  whileHover={{ scale: 1.1 }}
-                  transition={{ duration: 0.3 }}
+                  className="w-16 h-16 rounded-full object-cover"
                 />
                 <div className="flex-1">
                   <h4 className="font-semibold">{track.title}</h4>
                   <p className="text-xs text-gray-400">{track.artist}</p>
                 </div>
-                <motion.button
-                  whileTap={{ scale: 0.85 }}
-                  onClick={() => toggleFavorite(track)}
-                  className="p-2 bg-purple-600 rounded-full hover:bg-purple-700 transition"
-                >
-                  <Heart
-                    size={16}
-                    className={
-                      favorites.find((f) => f.id === track.id)
-                        ? "text-red-500"
-                        : "text-white"
-                    }
-                  />
-                </motion.button>
-              </motion.li>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => openPlayer(track)}
+                    className="p-2 bg-purple-600 rounded-full hover:bg-purple-700 transition"
+                  >
+                    <Play size={16} />
+                  </button>
+                  <button
+                    onClick={() => toggleFavorite(track)}
+                    className="p-2 rounded-full bg-neutral-700 hover:bg-neutral-600 transition"
+                  >
+                    <Heart
+                      size={16}
+                      className={
+                        favorites.find((f) => f.id === track.id)
+                          ? "text-red-500"
+                          : "text-gray-400"
+                      }
+                    />
+                  </button>
+                </div>
+              </li>
             ))}
           </ul>
-        </motion.div>
+        </div>
       </div>
+
+      {/* Popup Player */}
+      <AnimatePresence>
+        {currentTrack && (
+          <motion.div
+            key="popup"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              layoutId={`disc-${currentTrack.id}`}
+              className="bg-neutral-900 p-6 rounded-2xl flex flex-col items-center gap-4 w-full max-w-sm"
+            >
+              {/* Enlarged Disc */}
+              <motion.img
+                src={currentTrack.cover}
+                alt={currentTrack.title}
+                className="w-48 h-48 rounded-full object-cover"
+                animate={isPlaying ? { rotate: 360 } : { rotate: 0 }}
+                transition={
+                  isPlaying
+                    ? { repeat: Infinity, duration: 5, ease: "linear" }
+                    : {}
+                }
+              />
+
+              {/* Title / Artist */}
+              <h3 className="text-lg font-bold">{currentTrack.title}</h3>
+              <p className="text-sm text-gray-400">{currentTrack.artist}</p>
+
+              {/* Controls */}
+              <div className="flex items-center gap-4 w-full">
+                <button
+                  onClick={() => setIsPlaying(!isPlaying)}
+                  className="p-3 bg-purple-600 rounded-full hover:bg-purple-700"
+                >
+                  {isPlaying ? <Pause /> : <Play />}
+                </button>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  className="flex-1 accent-purple-500"
+                />
+                <button
+                  onClick={() => setCurrentTrack(null)}
+                  className="p-3 bg-neutral-700 rounded-full hover:bg-neutral-600"
+                >
+                  <X />
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
